@@ -8,15 +8,21 @@ import { Application, Assets, Text, Container, Graphics, Sprite, Circle } from "
    var mousePositionX
    var mousePositionY
 
+   var score = 0
+
+   const colors = [0xff6b6b, 0xffd93d, 0x6bcb77, 0x4d96ff, 0x9b59b6]
+
+   const gapBetweenBricks = 10
    const blocksList = []
    const rows = 5
    const columns = 6
-   var brickLenght = app.screen.width / columns
+   var brickLenght = app.screen.width / columns - gapBetweenBricks
    var brickHeight = 40
 
 
    var ballCurrentVx = 3
-   var ballCurrentVy = -5
+   var ballCurrentVy = -10
+
 
    var isInStartPosition = true
 
@@ -24,6 +30,18 @@ import { Application, Assets, Text, Container, Graphics, Sprite, Circle } from "
    const platformContainer = new Container()
    app.stage.addChild(platformContainer)
 
+
+  //  const scoreText = new Graphics()
+  //  scoreText.Text = score.toString()
+  //  app.stage.addChild(scoreText)
+
+  
+
+
+  const scoreText = new Text("Score: 0")
+  scoreText.x = 20
+  scoreText.y = 800
+  app.stage.addChild(scoreText)
 
 
 
@@ -33,11 +51,15 @@ import { Application, Assets, Text, Container, Graphics, Sprite, Circle } from "
    for (var row = 0; row < rows; row ++){
     for (var column = 0; column < columns; column ++){
       const brick = new Graphics();
-      brick.rect(0,0,brickLenght,brickHeight)
-      brick.fill(0xffffff)
-      brick.stroke(0x00000)
-      brick.x = column * brickLenght
-      brick.y = row * brickHeight
+      brickLenght = (app.screen.width - gapBetweenBricks * (columns+1)) / columns
+      brick.roundRect(0,0,brickLenght,brickHeight - gapBetweenBricks, 8)
+      brick.stroke({ color: 0x000000, width: 10 })
+      const random = Math.floor(Math.random() * colors.length)
+      const randomColor = colors[random]
+      brick.fill(randomColor)
+      brick.stroke(0xffffff, 2)
+      brick.x = gapBetweenBricks + column * (brickLenght + gapBetweenBricks)
+      brick.y = gapBetweenBricks + row * brickHeight
       bricksContainer.addChild(brick)
     }
    }
@@ -79,7 +101,7 @@ import { Application, Assets, Text, Container, Graphics, Sprite, Circle } from "
    window.addEventListener('keydown', (event) => {
     if (event.code == 'Space' && isInStartPosition == true){
       ballCurrentVx = 3
-      ballCurrentVy = -5
+      ballCurrentVy = -10
       isInStartPosition = false
 
       var currentBallCoordinateX = ball.getGlobalPosition().x
@@ -107,6 +129,9 @@ import { Application, Assets, Text, Container, Graphics, Sprite, Circle } from "
     platformContainer.x = mousePositionX - 50
     platformContainer.y = app.canvas.getBoundingClientRect().bottom - 50;
 
+
+    scoreText.text = ("Score: " + score.toString())
+
     if (isInStartPosition){
       ball.x = 50
       ball.y = -10
@@ -114,6 +139,18 @@ import { Application, Assets, Text, Container, Graphics, Sprite, Circle } from "
     else{
       ball.x += ballCurrentVx
       ball.y += ballCurrentVy
+    }
+
+    if (bricksContainer.children.length == 0){
+        const ResultText = new Text("Score: 0")
+        scoreText.width = 600
+        scoreText.height = 300
+        scoreText.anchor = 0.5
+        scoreText.x = app.screen.width / 2
+        scoreText.y = app.screen.height / 2
+        app.stage.addChild(scoreText)
+        scoreText.text = ("You win! Your score is " + score) 
+
     }
 
 
@@ -136,7 +173,7 @@ import { Application, Assets, Text, Container, Graphics, Sprite, Circle } from "
       if (checkCollision(ballBounds, brickBounds)){
         bricksContainer.removeChild(brick)
         ballCurrentVy = ballCurrentVy * -1
-
+        score ++
       }
 
     }
@@ -153,7 +190,12 @@ import { Application, Assets, Text, Container, Graphics, Sprite, Circle } from "
       ball.y = -10
       ballCurrentVx = 0
       ballCurrentVy = 0
+      score -= 5
     }
+
+    if (ball.y < 0){
+      ballCurrentVy = ballCurrentVy * -1
+        }
 
 
 
