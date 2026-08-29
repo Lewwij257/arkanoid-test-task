@@ -1,4 +1,4 @@
-import { Application, Assets, Text, Container, Graphics, Sprite } from "pixi.js";
+import { Application, Assets, Text, Container, Graphics, Sprite, Circle } from "pixi.js";
 
 (async () => {
    const app = new Application();
@@ -7,6 +7,41 @@ import { Application, Assets, Text, Container, Graphics, Sprite } from "pixi.js"
 
    var mousePositionX
    var mousePositionY
+
+   const blocksList = []
+   const rows = 5
+   const columns = 6
+   var brickLenght = app.screen.width / columns
+   var brickHeight = 40
+
+
+   var ballCurrentVx = 3
+   var ballCurrentVy = -5
+
+   var isInStartPosition = true
+
+
+   const platformContainer = new Container()
+   app.stage.addChild(platformContainer)
+
+
+
+
+
+   const bricksContainer = new Container()
+   app.stage.addChild(bricksContainer)
+   for (var row = 0; row < rows; row ++){
+    for (var column = 0; column < columns; column ++){
+      const brick = new Graphics();
+      brick.rect(0,0,brickLenght,brickHeight)
+      brick.fill(0xffffff)
+      brick.stroke(0x00000)
+      brick.x = column * brickLenght
+      brick.y = row * brickHeight
+      bricksContainer.addChild(brick)
+    }
+   }
+
 
    const container = document.getElementById('pixi-container').appendChild(app.canvas);
 
@@ -23,8 +58,42 @@ import { Application, Assets, Text, Container, Graphics, Sprite } from "pixi.js"
    platform.rect(0,0,100,20)
    platform.fill(0xff0000)
    platform.stroke(0xfffff)
-   app.stage.addChild(platform)
+   platformContainer.addChild(platform)
+
+   var ball = new Graphics()
    
+   ball.circle(0,0,10)
+   ball.fill(0x00000)
+   ball.x = 50
+   ball.y = -10
+   platformContainer.addChild(ball)
+   
+
+   function checkCollision(obj1, obj2){
+    if (obj2.x > obj1.x + obj1.width || obj2.x + obj2.width < obj1.x || obj2.y > obj1.y + obj1.height || obj2.y + obj2.height < obj1.y){
+      return false
+    }
+    return true
+   }
+
+   window.addEventListener('keydown', (event) => {
+    if (event.code == 'Space' && isInStartPosition == true){
+      ballCurrentVx = 3
+      ballCurrentVy = -5
+      isInStartPosition = false
+
+      var currentBallCoordinateX = ball.getGlobalPosition().x
+      var currentBallCoordinateY = ball.getGlobalPosition().y
+
+
+
+      platformContainer.removeChild(ball)
+      app.stage.addChild(ball)
+
+      ball.x = currentBallCoordinateX
+      ball.y = currentBallCoordinateY -20
+    }
+   })
 
    app.canvas.addEventListener('mousemove', (event) => {
     const react = app.canvas.getBoundingClientRect();
@@ -35,68 +104,59 @@ import { Application, Assets, Text, Container, Graphics, Sprite } from "pixi.js"
    })
 
    app.ticker.add((time) => {
-    platform.x = mousePositionX - 50
-    platform.y = app.canvas.getBoundingClientRect().bottom - 50;
+    platformContainer.x = mousePositionX - 50
+    platformContainer.y = app.canvas.getBoundingClientRect().bottom - 50;
+
+    if (isInStartPosition){
+      ball.x = 50
+      ball.y = -10
+    }
+    else{
+      ball.x += ballCurrentVx
+      ball.y += ballCurrentVy
+    }
+
+
+    if (ball.x < 0 || ball.x > app.screen.width){
+      ballCurrentVx = ballCurrentVx * (-1)
+    }
+
+    for (var i = 0; i < bricksContainer.children.length; i ++){
+      const brick = bricksContainer.children[i]
+
+      const ballBounds = ball.getBounds()
+      const brickBounds = brick.getBounds()
+
+      ball.width = ballBounds.width
+      ball.height = ballBounds.height
+
+      brick.width = brickBounds.width
+      brick.height = brickBounds.height
+
+      if (checkCollision(ballBounds, brickBounds)){
+        bricksContainer.removeChild(brick)
+        ballCurrentVy = ballCurrentVy * -1
+
+      }
+
+    }
+
+    if (checkCollision(platform.getBounds(), ball.getBounds()) && isInStartPosition == false){
+      ballCurrentVy = ballCurrentVy * -1
+    }
+
+
+    if (ball.y > app.screen.height){
+      isInStartPosition = true
+      platformContainer.addChild(ball)
+      ball.x = 50
+      ball.y = -10
+      ballCurrentVx = 0
+      ballCurrentVy = 0
+    }
+
+
+
    })
 
-  //  var scale = 1
-  //  var scaleDirection = 1;
-
-  //  app.canvas.addEventListener('mousemove', (event) => {
-  //   const react = app.canvas.getBoundingClientRect();
-  //   const x = event.clientX - react.left;
-  //   const y = event.clientY - react.top;
-  //   bunnyContainer.x = x;
-  //   bunnyContainer.y = y;
-  //  })
-
-  //  app.ticker.add((time) => {
-  //   bunnyContainer.rotation += 0.01 * time.deltaTime;
-  //   scale += 0.01 * scaleDirection * time.deltaTime;
-
-
-
-  //   if (scale > 3){
-  //     scaleDirection = -1
-  //   }
-  //   else if (scale < 1){
-  //     scaleDirection = 1
-  //   }
-
-
-
-  //   bunnySprite.scale.set(scale)
-  //  })
-  // // Create a new application
-  // const app = new Application();
-
-  // // Initialize the application
-  // await app.init({ background: "#1099bb", resizeTo: window });
-
-  // // Append the application canvas to the document body
-  // document.getElementById("pixi-container").appendChild(app.canvas);
-
-  // // Load the bunny texture
-  // const texture = await Assets.load("/assets/bunny.png");
-
-  // // Create a bunny Sprite
-  // const bunny = new Sprite(texture);
-  
-
-  // // Center the sprite's anchor point
-  // bunny.anchor.set(0.5);
-
-  // // Move the sprite to the center of the screen
-  // bunny.position.set(app.screen.width / 2, app.screen.height / 2);
-
-  // // Add the bunny to the stage
-  // app.stage.addChild(bunny);
-
-  // // Listen for animate update
-  // app.ticker.add((time) => {
-  //   // Just for fun, let's rotate mr rabbit a little.
-  //   // * Delta is 1 if running at 100% performance *
-  //   // * Creates frame-independent transformation *
-  //   bunny.rotation += 0.1 * time.deltaTime;
-  // });
 })();
