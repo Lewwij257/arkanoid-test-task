@@ -1,16 +1,21 @@
-import { Application, Assets, Text, Container, Graphics, Sprite, Circle } from "pixi.js";
+import { Application, Assets, Text, Container, Graphics, Sprite, TilingSprite } from "pixi.js";
 
 (async () => {
    const app = new Application();
 
-   await app.init({ background: "#1099bb", resizeTo: window });
+   await app.init({ background: "#0c0c0c", resizeTo: window });
 
-   var mousePositionX
-   var mousePositionY
+   var mousePositionX = app.screen.width / 2
+   var mousePositionY = app.screen.height / 2
 
    var score = 0
 
    const colors = [0xff6b6b, 0xffd93d, 0x6bcb77, 0x4d96ff, 0x9b59b6]
+
+   const backgroundImg = await Assets.load('/assets/spacezanindevs.png')
+   const backgroundSprite = new TilingSprite({texture: backgroundImg, width: app.screen.width, height: app.screen.height})
+   backgroundSprite.tileScale.set(0.5,0.5)
+   app.stage.addChild(backgroundSprite)
 
    const gapBetweenBricks = 10
    const blocksList = []
@@ -38,10 +43,21 @@ import { Application, Assets, Text, Container, Graphics, Sprite, Circle } from "
   
 
 
-  const scoreText = new Text("Score: 0")
+  const scoreTextBg = new Graphics()
+  scoreTextBg.rect(0,0,200,60)
+  scoreTextBg.x = 20
+  scoreTextBg.y = 800
+  scoreTextBg.fill("#faf6f6")
+  app.stage.addChild(scoreTextBg)
+
+  const scoreText = new Text("Score: 0", {
+    fill: "#3b1dc2",
+    fontSize: 50
+  })
   scoreText.x = 20
   scoreText.y = 800
   app.stage.addChild(scoreText)
+
 
 
 
@@ -53,7 +69,7 @@ import { Application, Assets, Text, Container, Graphics, Sprite, Circle } from "
       const brick = new Graphics();
       brickLenght = (app.screen.width - gapBetweenBricks * (columns+1)) / columns
       brick.roundRect(0,0,brickLenght,brickHeight - gapBetweenBricks, 8)
-      brick.stroke({ color: 0x000000, width: 10 })
+      brick.stroke({ color: "#575353", width: 10 })
       const random = Math.floor(Math.random() * colors.length)
       const randomColor = colors[random]
       brick.fill(randomColor)
@@ -85,7 +101,7 @@ import { Application, Assets, Text, Container, Graphics, Sprite, Circle } from "
    var ball = new Graphics()
    
    ball.circle(0,0,10)
-   ball.fill(0x00000)
+   ball.fill("#ebe6e6")
    ball.x = 50
    ball.y = -10
    platformContainer.addChild(ball)
@@ -142,7 +158,10 @@ import { Application, Assets, Text, Container, Graphics, Sprite, Circle } from "
     }
 
     if (bricksContainer.children.length == 0){
-        const ResultText = new Text("Score: 0")
+      const scoreText = new Text("Score: 0", {
+      fill: "#e4e3eb",
+      fontSize: 100
+      })        
         scoreText.width = 600
         scoreText.height = 300
         scoreText.anchor = 0.5
